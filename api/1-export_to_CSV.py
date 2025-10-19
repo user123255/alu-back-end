@@ -1,67 +1,46 @@
 #!/usr/bin/python3
 """
-1-export_to_CSV.py
-Exports TODO list progress for a given employee ID to a CSV file.
+Exports data for a given employee ID to CSV format.
+
+Requirements:
+- Records all tasks owned by this employee
+- Format: "USER_ID","USERNAME","TASK_COMPLETED_STATUS","TASK_TITLE"
+- File name: USER_ID.csv
 """
 
 import csv
 import requests
 import sys
 
+if __name__ == "__main__":
+    # Ensure user provided an employee ID
+    if len(sys.argv) != 2:
+        print("Usage: {} <employee_id>".format(sys.argv[0]))
+        sys.exit(1)
 
-def fetch_employee_data(employee_id):
-    """Fetch user data for a given employee ID."""
-    url = f"https://jsonplaceholder.typicode.com/users/{employee_id}"
-    response = requests.get(url)
-    if response.status_code != 200:
-        raise Exception(f"Error fetching user data: {response.status_code}")
-    return response.json()
+    employee_id = sys.argv[1]
 
+    # API endpoints
+    user_url = f"https://jsonplaceholder.typicode.com/users/{employee_id}"
+    todos_url = f"https://jsonplaceholder.typicode.com/users/{employee_id}/todos"
 
-def fetch_todos(employee_id):
-    """Fetch TODO list for a given employee ID."""
-    url = f"https://jsonplaceholder.typicode.com/todos?userId={employee_id}"
-    response = requests.get(url)
-    if response.status_code != 200:
-        raise Exception(f"Error fetching TODO list: {response.status_code}")
-    return response.json()
+    # Fetch user and tasks data
+    user = requests.get(user_url).json()
+    todos = requests.get(todos_url).json()
 
+    # Extract username
+    username = user.get("username")
 
-def export_to_csv(employee, todos):
-    """Export all tasks for the employee to a CSV file."""
-    filename = f"{employee['id']}.csv"
-    with open(filename, mode='w', newline='', encoding='utf-8') as csvfile:
+    # File name based on employee ID
+    filename = f"{employee_id}.csv"
+
+    # Write data to CSV
+    with open(filename, "w", newline="", encoding="utf-8") as csvfile:
         writer = csv.writer(csvfile, quoting=csv.QUOTE_ALL)
         for task in todos:
             writer.writerow([
-                employee['id'],
-                employee['username'],
-                task['completed'],
-                task['title']
+                employee_id,
+                username,
+                task.get("completed"),
+                task.get("title")
             ])
-
-
-def main():
-    """Main function to run the script."""
-    if len(sys.argv) != 2:
-        print(f"Usage: {sys.argv[0]} <employee_id>")
-        sys.exit(1)
-
-    try:
-        employee_id = int(sys.argv[1])
-    except ValueError:
-        print("Error: employee_id must be an integer")
-        sys.exit(1)
-
-    try:
-        employee = fetch_employee_data(employee_id)
-        todos = fetch_todos(employee_id)
-        export_to_csv(employee, todos)
-    except Exception as e:
-        print(e)
-        sys.exit(1)
-
-
-if __name__ == "__main__":
-    main()
-
