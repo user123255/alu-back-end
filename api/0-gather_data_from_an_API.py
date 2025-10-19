@@ -1,79 +1,49 @@
 #!/usr/bin/python3
 """
-0-gather_data_from_an_API.py
-Fetches TODO list progress for a given employee ID using a REST API
+Fetches and displays TODO list progress for a given employee ID.
+
+Requirements:
+- Uses requests module
+- Accepts employee ID as a parameter
+- Displays progress in the format:
+  Employee EMPLOYEE_NAME is done with tasks(NUMBER_OF_DONE_TASKS/TOTAL_NUMBER_OF_TASKS):
+     TASK_TITLE
 """
 
-import sys
 import requests
-
-
-def fetch_employee_data(employee_id):
-    """Fetch user data for a given employee ID."""
-    user_url = f"https://jsonplaceholder.typicode.com/users/{employee_id}"
-    response = requests.get(user_url)
-    if response.status_code != 200:
-        raise Exception(f"Error fetching user data: {response.status_code}")
-    return response.json()
-
-
-def fetch_todos(employee_id):
-    """Fetch TODO list for a given employee ID."""
-    todos_url = f"https://jsonplaceholder.typicode.com/todos?userId={employee_id}"
-    response = requests.get(todos_url)
-    if response.status_code != 200:
-        raise Exception(f"Error fetching TODO list: {response.status_code}")
-    return response.json()
-
-
-def display_todo_progress(employee, todos):
-    """Display TODO list progress in the specified format."""
-    completed_tasks = [task for task in todos if task['completed']]
-    total_tasks = len(todos)
-
-    print(
-        f"Employee {employee['name']} is done with tasks "
-        f"({len(completed_tasks)}/{total_tasks}):"
-    )
-
-    for task in completed_tasks:
-        print(f"\t {task['title']}")
-
-
-def main():
-    """Main function to run the script."""
-    if len(sys.argv) != 2:
-        print(f"Usage: {sys.argv[0]} <employee_id>")
-        sys.exit(1)
-
-    try:
-        employee_id = int(sys.argv[1])
-    except ValueError:
-        print("Error: employee_id must be an integer")
-        sys.exit(1)
-
-    try:
-        employee = fetch_employee_data(employee_id)
-        todos = fetch_todos(employee_id)
-        display_todo_progress(employee, todos)
-    except Exception as e:
-        print(e)
-        sys.exit(1)
+import sys
 
 
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) != 2:
+        print("Usage: {} <employee_id>".format(sys.argv[0]))
+        sys.exit(1)
 
+    employee_id = sys.argv[1]
 
+    # Define API endpoints
+    base_url = "https://jsonplaceholder.typicode.com/"
+    user_url = "{}users/{}".format(base_url, employee_id)
+    todos_url = "{}todos?userId={}".format(base_url, employee_id)
 
+    # Fetch user and todo data
+    user = requests.get(user_url).json()
+    todos = requests.get(todos_url).json()
 
+    employee_name = user.get("name")
 
+    # Calculate task stats
+    total_tasks = len(todos)
+    done_tasks = [task for task in todos if task.get("completed") is True]
+    number_of_done_tasks = len(done_tasks)
 
+    # Print header line
+    print(
+        "Employee {} is done with tasks({}/{}):".format(
+            employee_name, number_of_done_tasks, total_tasks
+        )
+    )
 
-
-
-
-
-
-
-
+    # Print titles of completed tasks
+    for task in done_tasks:
+        print("\t {}".format(task.get("title")))
