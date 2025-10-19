@@ -1,58 +1,45 @@
 #!/usr/bin/python3
 """
-3-dictionary_of_list_of_dictionaries.py
-Exports all TODO list progress for all employees to a JSON file.
+Exports all employee tasks to JSON format.
+File: todo_all_employees.json
 """
 
 import json
 import requests
 
 
-def fetch_all_users():
-    """Fetch all users from the API."""
-    url = "https://jsonplaceholder.typicode.com/users"
-    response = requests.get(url)
-    if response.status_code != 200:
-        raise Exception(f"Error fetching users: {response.status_code}")
-    return response.json()
+if __name__ == "__main__":
+    # Base URLs for users and todos endpoints
+    users_url = "https://jsonplaceholder.typicode.com/users"
+    todos_url = "https://jsonplaceholder.typicode.com/todos"
 
+    # Fetch all users
+    users = requests.get(users_url).json()
 
-def fetch_todos_for_user(user_id):
-    """Fetch TODO list for a specific user."""
-    url = f"https://jsonplaceholder.typicode.com/todos?userId={user_id}"
-    response = requests.get(url)
-    if response.status_code != 200:
-        raise Exception(f"Error fetching TODOs for user {user_id}: {response.status_code}")
-    return response.json()
-
-
-def export_all_to_json(users):
-    """Export all tasks for all users to a JSON file."""
-    all_data = {}
+    # Dictionary to hold all users' tasks
+    all_tasks = {}
 
     for user in users:
-        todos = fetch_todos_for_user(user['id'])
-        all_data[str(user['id'])] = [
-            {
-                "username": user['username'],
-                "task": task['title'],
-                "completed": task['completed']
+        user_id = user.get("id")
+        username = user.get("username")
+
+        # Fetch tasks for each user
+        todos = requests.get(todos_url, params={"userId": user_id}).json()
+
+        # Structure data for each user
+        user_tasks = []
+        for todo in todos:
+            task_data = {
+                "username": username,
+                "task": todo.get("title"),
+                "completed": todo.get("completed")
             }
-            for task in todos
-        ]
+            user_tasks.append(task_data)
 
-    with open("todo_all_employees.json", mode='w', encoding='utf-8') as jsonfile:
-        json.dump(all_data, jsonfile)
+        # Assign to main dictionary
+        all_tasks[user_id] = user_tasks
 
+    # Write data to JSON file
+    with open("todo_all_employees.json", "w", encoding="utf-8") as f:
+        json.dump(all_tasks, f)
 
-def main():
-    """Main function to execute the script."""
-    try:
-        users = fetch_all_users()
-        export_all_to_json(users)
-    except Exception as e:
-        print(e)
-
-
-if __name__ == "__main__":
-    main()
