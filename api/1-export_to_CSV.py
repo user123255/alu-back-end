@@ -20,9 +20,10 @@ if __name__ == "__main__":
 
     employee_id = sys.argv[1]
 
-    # API endpoints
-    user_url = f"https://jsonplaceholder.typicode.com/users/{employee_id}"
-    todos_url = f"https://jsonplaceholder.typicode.com/users/{employee_id}/todos"
+    # API endpoints (line split to follow PEP8 line length rule)
+    base_url = "https://jsonplaceholder.typicode.com/users/"
+    user_url = base_url + employee_id
+    todos_url = base_url + employee_id + "/todos"
 
     # Fetch user and tasks data
     user = requests.get(user_url).json()
